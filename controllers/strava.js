@@ -1,4 +1,4 @@
-const { response } = require("express");
+const { response, request } = require("express");
 
 const strava = async (req, res = response) => {
   const VERIFY_TOKEN = "LIGAKOM";
@@ -6,8 +6,6 @@ const strava = async (req, res = response) => {
   let mode = req.query["hub.mode"];
   let token = req.query["hub.verify_token"];
   let challenge = req.query["hub.challenge"];
-
-  console.log(req.query);
 
   if (!mode || !token)
     return res.status(500).send("Hubo un problema con el webhook");
@@ -18,8 +16,8 @@ const strava = async (req, res = response) => {
   return res.json({ "hub.challenge": challenge });
 };
 
-const stravaWebhook = async (req, res = response) => {
-  console.log("🚀 🚀 🚀 webhook event received!");
+const stravaWebhook = async (req = request, res = response) => {
+  console.log("🚀 Event received from Strava!");
   console.log(req.body);
   return res.status(200).send("EVENT_RECEIVED");
 };
