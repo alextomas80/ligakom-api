@@ -16,9 +16,9 @@ const strava = async (req, res = response) => {
   return res.json({ "hub.challenge": challenge });
 };
 
-const stravaWebhook = async (req = request, res = response) => {
+const stravaWebhook = (req = request, res = response) => {
   console.log("🚀 Event received from Strava!");
-  console.log(req);
+  // console.log(req);
   console.log(req.body);
   return res.status(200).send("EVENT_RECEIVED");
 };
