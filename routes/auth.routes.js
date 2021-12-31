@@ -50,9 +50,8 @@ const {
 router.get("/strava", strava);
 router.post("/strava", (req, res) => {
   console.log("🚀 webhook event received!");
-  console.log("req");
-  console.log(req);
-  res.status(200).send("EVENT_RECEIVED");
+  console.log(req.body);
+  return res.status(200).send("EVENT_RECEIVED");
 });
 // router.get("/renew", validateJWT, renewToken);
 
