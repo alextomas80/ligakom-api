@@ -18,6 +18,7 @@ const strava = async (req, res = response) => {
 
 const stravaWebhook = async (req = request, res = response) => {
   console.log("🚀 Event received from Strava!");
+  console.log(req);
   console.log(req.body);
   return res.status(200).send("EVENT_RECEIVED");
 };
