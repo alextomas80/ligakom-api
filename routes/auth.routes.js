@@ -15,6 +15,7 @@ const router = Router();
 
 const {
   strava,
+  stravaWebhook,
   // createUser,
   // loginUser,
   // renewToken,
@@ -48,11 +49,7 @@ const {
 //   loginUser
 // );
 router.get("/strava", strava);
-router.post("/strava", (req, res) => {
-  console.log("🚀 webhook event received!");
-  console.log(req.body);
-  return res.status(200).send("EVENT_RECEIVED");
-});
+router.post("/strava", stravaWebhook);
 // router.get("/renew", validateJWT, renewToken);
 
 module.exports = router;

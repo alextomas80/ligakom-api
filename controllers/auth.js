@@ -52,6 +52,12 @@ const strava = async (req, res = response) => {
     }
   }
 };
+const stravaWebhook = async (req, res = response) => {
+  console.log("🚀 🚀 🚀 webhook event received!");
+  console.log(req.body);
+  return res.status(200).send("EVENT_RECEIVED");
+};
+
 // const loginUser = async (req, res = response) => {
 //   const { email, password } = req.body;
 
@@ -101,4 +107,4 @@ const strava = async (req, res = response) => {
 //   res.status(201).json(item);
 // };
 
-module.exports = { authenticateStrava, strava };
+module.exports = { authenticateStrava, strava, stravaWebhook };
