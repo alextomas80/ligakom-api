@@ -12,6 +12,7 @@ class Server {
     this.port = process.env.PORT || 3100;
     this.paths = {
       auth: "/api/auth",
+      strava: "/strava",
     };
 
     // database
@@ -49,7 +50,8 @@ class Server {
   }
 
   routes() {
-    this.app.use(this.paths.auth, require("../routes/auth.routes"));
+    // this.app.use(this.paths.auth, require("../routes/auth.routes"));
+    this.app.use(this.paths.strava, require("../routes/strava.routes"));
     // app.use('/api/users', require('../routes/users'));
     // this.app.use(this.paths.articles, require("../routes/articles.routes"));
     // this.app.use(this.paths.categories, require("../routes/categories.routes"));

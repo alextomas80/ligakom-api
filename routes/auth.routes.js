@@ -48,8 +48,8 @@ const {
 //   ],
 //   loginUser
 // );
-router.get("/strava", strava);
-router.post("/strava", stravaWebhook);
+// router.get("/strava", strava);
+// router.post("/strava", stravaWebhook);
 // router.get("/renew", validateJWT, renewToken);
 
 module.exports = router;
