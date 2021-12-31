@@ -33,7 +33,7 @@ const authenticateStrava = async (req, res = response) => {
 };
 
 const strava = async (req, res = response) => {
-  const VERIFY_TOKEN = "STRAVA";
+  const VERIFY_TOKEN = "LIGAKOM";
 
   let mode = req.query["hub.mode"];
   let token = req.query["hub.verify_token"];
