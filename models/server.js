@@ -19,7 +19,7 @@ class Server {
     // this.databaseConnect();
 
     // middlewares
-    // this.middlewares();
+    this.middlewares();
 
     // routes
     this.routes();
