@@ -1,9 +1,9 @@
 const express = require("express");
 const cors = require("cors");
-const fileUpload = require("express-fileupload");
+// const fileUpload = require("express-fileupload");
 const colors = require("colors");
 
-const { dbConnection } = require("../database/config");
+const { dbConnection } = require("./database/config");
 // require("../database/cache");
 
 class Server {
@@ -12,11 +12,13 @@ class Server {
     this.port = process.env.PORT || 3100;
     this.paths = {
       auth: "/api/auth",
+      leagues: "/leagues",
       strava: "/strava",
+      users: "/users",
     };
 
     // database
-    // this.databaseConnect();
+    this.databaseConnect();
 
     // middlewares
     this.middlewares();
@@ -26,7 +28,7 @@ class Server {
   }
 
   databaseConnect() {
-    // dbConnection();
+    dbConnection();
   }
 
   middlewares() {
@@ -51,7 +53,9 @@ class Server {
 
   routes() {
     // this.app.use(this.paths.auth, require("../routes/auth.routes"));
-    this.app.use(this.paths.strava, require("../routes/strava.routes"));
+    this.app.use(this.paths.strava, require("./routes/strava.routes"));
+    this.app.use(this.paths.leagues, require("./routes/leagues.routes"));
+    this.app.use(this.paths.users, require("./routes/users.routes"));
     // app.use('/api/users', require('../routes/users'));
     // this.app.use(this.paths.articles, require("../routes/articles.routes"));
     // this.app.use(this.paths.categories, require("../routes/categories.routes"));

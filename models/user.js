@@ -1,29 +1,48 @@
 const { Schema, model } = require("mongoose");
 
-const UserSchema = Schema({
-  name: {
-    type: String,
-    required: true,
+const UserSchema = Schema(
+  {
+    idStrava: {
+      type: Number,
+      required: true,
+    },
+    username: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+    firstname: {
+      type: String,
+      required: true,
+    },
+    lastname: {
+      type: String,
+    },
+    sex: {
+      type: String,
+      default: "M",
+    },
+    profile: {
+      type: String,
+    },
+    access_token: {
+      type: String,
+      required: true,
+    },
+    refresh_token: {
+      type: String,
+      required: true,
+    },
   },
-  email: {
-    type: String,
-    required: true,
-    unique: true,
-  },
-  password: {
-    type: String,
-    required: true,
-  },
-  role: {
-    type: String,
-    required: true,
-    emun: ["ADMIN_ROLE", "USER_ROLE"],
-    default: "USER_ROLE",
-  },
-});
+
+  {
+    timestamps: true,
+    versionKey: false,
+  }
+);
 
 UserSchema.methods.toJSON = function () {
-  const { __v, password, _id, ...user } = this.toObject();
+  const { _id, ...user } = this.toObject();
   user.uid = _id;
   return user;
 };
