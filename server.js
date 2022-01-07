@@ -52,6 +52,10 @@ class Server {
   }
 
   routes() {
+    this.app.get("/", function (req, res) {
+      res.send("hello world");
+    });
+
     // this.app.use(this.paths.auth, require("../routes/auth.routes"));
     this.app.use(this.paths.strava, require("./routes/strava.routes"));
     this.app.use(this.paths.leagues, require("./routes/leagues.routes"));
