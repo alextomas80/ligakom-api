@@ -52,8 +52,8 @@ class Server {
   }
 
   routes() {
-    this.app.get("/", function (req, res) {
-      res.send("hello world");
+    this.app.get("/exchange_token", function (req, res) {
+      res.send("exchange_token");
     });
 
     // this.app.use(this.paths.auth, require("../routes/auth.routes"));
