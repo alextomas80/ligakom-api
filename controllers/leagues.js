@@ -30,7 +30,14 @@ const findOne = async (req, res = response) => {
   const { id } = req.params;
 
   const league = await League.findById(id)
-    .populate("users")
+    .populate({
+      path: "athletes",
+      model: "User",
+    })
+    .populate({
+      path: "owner",
+      model: "User",
+    })
     .populate("segments");
 
   return res.status(200).json(league);

@@ -1,16 +1,7 @@
-const moment = require('moment');
+const moment = require("moment");
 
-const isDate = (value, { req, location, path }) => {
-	if (!value) {
-		return false;
-	}
-
-	const date = moment(value);
-	if (date.isValid()) {
-		return true;
-	} else {
-		return false;
-	}
+const formatDate = (value, mask = "YYYY-MM-DD") => {
+  return moment(value).format(mask);
 };
 
-module.exports = { isDate };
+module.exports = { formatDate };

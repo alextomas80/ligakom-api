@@ -1,4 +1,5 @@
 const axios = require("axios");
+const { formatDate } = require("../helpers/isDate");
 
 const STRAVA_URL = "https://www.strava.com/api/v3";
 
@@ -31,14 +32,49 @@ const getSegmentInformation = async ({ sid, access_token }) => {
 };
 
 const getCurrentUser = async (access_token) => {
-  console.log(access_token);
   const user = await axios.get(`${STRAVA_URL}/athlete`, {
     headers: { Authorization: `Bearer ${access_token}` },
   });
   return user.data;
 };
 
+const refreshToken = async (refresh_token) => {
+  const response = await axios.post(`${STRAVA_URL}/oauth/token`, {
+    client_id: process.env.STRAVA_CLIENT_ID,
+    client_secret: process.env.STRAVA_CLIENT_SECRET,
+    grant_type: "refresh_token",
+    refresh_token,
+  });
+  return response.data;
+};
+
+const getSegmentEfforts = async (
+  access_token,
+  segments,
+  startDate,
+  endDate
+) => {
+  const efforts = await Promise.all(
+    segments.map(async (segment) => {
+      const mockedDate = "2021-12-01";
+
+      const startDateParam = `&start_date_local=${mockedDate}`;
+      const endDateParam = `&end_date_local=${formatDate(endDate)}`;
+
+      const effort = await axios.get(
+        `${STRAVA_URL}/segment_efforts?segment_id=${segment}}${startDateParam}${endDateParam}`,
+        { headers: { Authorization: `Bearer ${access_token}` } }
+      );
+
+      return effort.data;
+    })
+  );
+  return efforts;
+};
+
 module.exports = {
   getSegmentInformation,
   getCurrentUser,
+  refreshToken,
+  getSegmentEfforts,
 };

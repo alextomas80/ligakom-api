@@ -115,9 +115,16 @@ const myLeagues = async (req, res = response) => {
   const { userId } = req.params;
 
   const user = await User.findOne({ idStrava: userId });
-  const leagues = await League.find({ athletes: user._id }).populate(
-    "segments"
-  );
+  const leagues = await League.find({ athletes: user._id })
+    .populate({
+      path: "athletes",
+      model: "User",
+    })
+    .populate({
+      path: "owner",
+      model: "User",
+    })
+    .populate("segments");
   const leaguesMapped = leagues.map((league) => {
     return {
       league,

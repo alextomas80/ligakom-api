@@ -43,9 +43,9 @@ const LeagueSchema = Schema(
 );
 
 LeagueSchema.methods.toJSON = function () {
-  const { __v, _id, uploads, files, file, ...article } = this.toObject();
-  article.uid = _id;
-  return article;
+  const { _id, ...league } = this.toObject();
+  league.uid = _id;
+  return league;
 };
 
 module.exports = model("League", LeagueSchema);

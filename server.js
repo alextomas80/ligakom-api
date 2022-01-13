@@ -4,6 +4,7 @@ const cors = require("cors");
 const colors = require("colors");
 
 const { dbConnection } = require("./database/config");
+
 // require("../database/cache");
 
 class Server {
@@ -53,7 +54,7 @@ class Server {
 
   routes() {
     this.app.get("/exchange_token", function (req, res) {
-      res.send("exchange_token");
+      return res.status(200).json(req.query);
     });
 
     // this.app.use(this.paths.auth, require("../routes/auth.routes"));
