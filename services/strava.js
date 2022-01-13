@@ -56,11 +56,11 @@ const getSegmentEfforts = async (
 ) => {
   const efforts = await Promise.all(
     segments.map(async (segment) => {
-      const mockedDate = "2021-12-01";
+      const mockedDate = "2021-09-01";
 
       const startDateParam = `&start_date_local=${mockedDate}`;
       const endDateParam = `&end_date_local=${formatDate(endDate)}`;
-
+      console.log(access_token);
       const effort = await axios.get(
         `${STRAVA_URL}/segment_efforts?segment_id=${segment}}${startDateParam}${endDateParam}`,
         { headers: { Authorization: `Bearer ${access_token}` } }
@@ -72,9 +72,19 @@ const getSegmentEfforts = async (
   return efforts;
 };
 
+const getActivity = async (access_token, id) => {
+  return await axios
+    .get(`${STRAVA_URL}/activities/${id}`, {
+      headers: { Authorization: `Bearer ${access_token}` },
+    })
+    .then((response) => response.data)
+    .catch((error) => error.response.data);
+};
+
 module.exports = {
   getSegmentInformation,
   getCurrentUser,
   refreshToken,
   getSegmentEfforts,
+  getActivity,
 };
