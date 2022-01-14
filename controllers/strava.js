@@ -1,4 +1,5 @@
 const { response, request } = require("express");
+const { formatDate } = require("../helpers/formatDate");
 const formatEffort = require("../helpers/formatEffort");
 
 const { refreshToken, getActivity } = require("../services/strava");
@@ -20,87 +21,8 @@ const strava = (req, res = response) => {
   return res.json({ "hub.challenge": challenge });
 };
 
-// const stravaWebhookOld = async (req = request, res = response) => {
-//   console.log("🚀 Event received from Strava!!!");
-
-//   const { owner_id } = req.body;
-
-//   const { data: user, error: errorUser } = await supabase
-//     .from("athletes")
-//     .select("id, username, refresh_token, access_token")
-//     .eq("strava_id", owner_id)
-//     .single();
-
-//   if (errorUser) {
-//     return res.status(404).send(errorUser);
-//   }
-
-//   // refrescar token
-//   const credentials = await refreshToken(user.refresh_token);
-
-//   const payload = {
-//     refresh_token: credentials.refresh_token,
-//     access_token: credentials.access_token,
-//     expires_at: credentials.expires_at,
-//     expires_in: credentials.expires_in,
-//   };
-//   const { data: refreshData, error: errorRefresh } = await supabase
-//     .from("athletes")
-//     .update(payload)
-//     .eq("strava_id", owner_id)
-//     .single();
-
-//   if (errorRefresh) {
-//     return res.status(404).send(errorRefresh);
-//   }
-
-//   // obtener ligas del usuario
-//   const { data, error: errorLeagues } = await supabase.from("leagues").select(
-//     `id, name, start_date, end_date,
-//     athletes!athlete_league (id),
-//     segments!segment_league (id)`
-//   );
-//   const leagues = data.filter((league) => {
-//     return league.athletes.filter((athlete) => athlete.id === user.id);
-//   });
-
-//   if (errorLeagues) {
-//     return res.status(404).send(errorLeagues);
-//   }
-
-//   const leaguesToImport = leagues.map((league) => {
-//     return {
-//       start_date: league.start_date,
-//       end_date: league.end_date,
-//       segments: league.segments.map((segment) => segment.id),
-//     };
-//   });
-
-//   leaguesToImport.forEach(async (league) => {
-//     const segmentEfforts = await getSegmentEfforts(
-//       credentials.access_token,
-//       league.segments,
-//       league.start_date,
-//       league.end_date
-//     );
-
-//     segmentEfforts.forEach(async (arrEfforts) => {
-//       const efforts = formatEffort(arrEfforts);
-//       const { data: dataEfforts, error: errorEfforts } = await supabase
-//         .from("efforts")
-//         .upsert(efforts);
-
-//       if (errorEfforts) {
-//         return res.status(404).send(errorEfforts);
-//       }
-//     });
-//   });
-
-//   return res.status(200).send("EVENT_RECEIVED");
-// };
-
 const stravaWebhook = async (req = request, res = response) => {
-  console.log("🚀 🚀 🚀 Event received from Strava");
+  console.log(" 🥳  Event received from Strava");
 
   const { owner_id, object_id } = req.body;
 
@@ -145,11 +67,18 @@ const stravaWebhook = async (req = request, res = response) => {
   const { segment_efforts } = responseActivity;
 
   // obtener ligas del usuario
-  const { data, error: errorLeagues } = await supabase.from("leagues").select(
-    `id, name, start_date, end_date,
-    athletes!athlete_league (id),
-    segments!segment_league (id)`
-  );
+  const today = formatDate(new Date());
+  const { data, error: errorLeagues } = await supabase
+    .from("leagues")
+    .select(
+      `id, name, start_date, end_date,
+       segments!segment_league (id),
+       athletes!athlete_league (id)`
+    )
+    .lte("start_date", today)
+    .gte("end_date", today)
+    .order("name");
+
   const leagues = data.filter((league) => {
     return league.athletes.filter((athlete) => athlete.id === user.id);
   });
