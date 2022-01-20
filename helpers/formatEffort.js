@@ -1,4 +1,4 @@
-const formatEffort = (effort) => {
+const formatEffort = (effort, league_id) => {
   const {
     id,
     elapsed_time,
@@ -27,6 +27,7 @@ const formatEffort = (effort) => {
     average_watts,
     average_heartrate,
     max_heartrate,
+    league_id,
   };
 };
 

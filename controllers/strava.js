@@ -22,13 +22,13 @@ const strava = (req, res = response) => {
 };
 
 const stravaWebhook = async (req = request, res = response) => {
-  console.log(" 🥳  Event received from Strava");
+  console.log(" 🥳 🥳 🥳  Event received from Strava");
 
   const { owner_id, object_id } = req.body;
 
   const { data: user, error: errorUser } = await supabase
     .from("athletes")
-    .select("id, username, refresh_token, access_token")
+    .select("id, username, firstname, lastname, refresh_token, access_token")
     .eq("strava_id", owner_id)
     .single();
 
@@ -45,6 +45,7 @@ const stravaWebhook = async (req = request, res = response) => {
     expires_at: credentials.expires_at,
     expires_in: credentials.expires_in,
   };
+
   const { data: refreshData, error: errorRefresh } = await supabase
     .from("athletes")
     .update(payload)
@@ -81,7 +82,8 @@ const stravaWebhook = async (req = request, res = response) => {
     .order("name");
 
   const leagues = data.filter((league) => {
-    return league.athletes.filter((athlete) => athlete.id === user.id);
+    const athletes = league.athletes.map((athlete) => athlete.id);
+    return athletes.includes(user.id);
   });
 
   if (errorLeagues) {
@@ -91,22 +93,34 @@ const stravaWebhook = async (req = request, res = response) => {
   const segmentsToSave = [];
   leagues.forEach((league) => {
     const ids = league.segments.map((segment) => segment.id);
-    segmentsToSave.push(...ids);
-  });
-
-  // recorro los esfueros del usuario y si está en sus ligas se guarda
-  segment_efforts.forEach(async (effort) => {
-    if (segmentsToSave.includes(effort.segment.id)) {
-      const { data: dataEfforts, error: errorEfforts } = await supabase
-        .from("efforts")
-        .upsert(formatEffort(effort));
-      if (errorEfforts) {
-        return res.status(404).send(errorEfforts);
-      }
+    if (ids) {
+      segmentsToSave.push({ league_id: league.id, segments: [...ids] });
     }
   });
 
-  return res.status(200).send("EVENT_RECEIVED");
+  // recorro los esfueros del usuario y si está en sus ligas se guarda
+
+  const searchSementInsideEfforts = (segment_id) => {
+    return segment_efforts.find((effort) => effort.segment.id === segment_id);
+  };
+
+  let totalEfforts = 0;
+
+  segmentsToSave.forEach(({ league_id, segments }) => {
+    segments.forEach(async (segment_id) => {
+      const effort = searchSementInsideEfforts(segment_id);
+      if (effort) {
+        totalEfforts++;
+        const { data: dataEfforts, error: errorEfforts } = await supabase
+          .from("efforts")
+          .upsert(formatEffort(effort, league_id));
+      }
+    });
+  });
+
+  return res
+    .status(200)
+    .send(`${totalEfforts} esfuerzos para ${user.firstname} ${user.lastname}`);
 };
 
 module.exports = { strava, stravaWebhook };
