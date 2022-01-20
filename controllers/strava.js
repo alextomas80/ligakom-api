@@ -68,6 +68,7 @@ const stravaWebhook = async (req = request, res = response) => {
 
   // obtener ligas del usuario
   const today = formatDate(new Date());
+
   const { data, error: errorLeagues } = await supabase
     .from("leagues")
     .select(

@@ -32,8 +32,8 @@ class Server {
   }
 
   routes() {
-    this.app.get("/exchange_token", function (req, res) {
-      return res.status(200).json(req.query);
+    this.app.get("/", function (req, res) {
+      return res.status(200).send("LigaKOM online");
     });
 
     this.app.use(this.paths.strava, require("./routes/strava.routes"));
