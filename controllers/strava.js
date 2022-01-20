@@ -22,9 +22,13 @@ const strava = (req, res = response) => {
 };
 
 const stravaWebhook = async (req = request, res = response) => {
-  console.log(" 🥳 🥳 🥳  Event received from Strava");
-
   const { owner_id, object_id } = req.body;
+
+  if (!owner_id || !object_id) {
+    return res.status(500).send("owner_id, object_id sin requeridos");
+  }
+
+  console.log(" 🥳 🥳 🥳  Event received from Strava");
 
   const { data: user, error: errorUser } = await supabase
     .from("athletes")
