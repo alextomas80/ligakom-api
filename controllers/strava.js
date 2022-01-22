@@ -70,6 +70,7 @@ const stravaWebhook = async (req = request, res = response) => {
   }
 
   const { segment_efforts } = responseActivity;
+  console.log(`🔥 Obtenidos ${segment_efforts.length} esfuerzos`);
 
   // obtener ligas del usuario
   const today = formatDate(new Date());
