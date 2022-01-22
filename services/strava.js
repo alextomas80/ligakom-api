@@ -14,7 +14,7 @@ const refreshToken = async (refresh_token) => {
 
 const getActivity = async (access_token, id) => {
   return await axios
-    .get(`${STRAVA_URL}/activities/${id}`, {
+    .get(`${STRAVA_URL}/activities/${id}?include_all_efforts=true`, {
       headers: { Authorization: `Bearer ${access_token}` },
     })
     .then((response) => response.data)
