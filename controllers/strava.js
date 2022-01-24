@@ -1,6 +1,7 @@
 const { response, request } = require("express");
 const { formatDate } = require("../helpers/formatDate");
 const formatEffort = require("../helpers/formatEffort");
+const dayjs = require("dayjs");
 
 const { refreshToken, getActivity } = require("../services/strava");
 const supabase = require("../services/supabase");
@@ -65,6 +66,7 @@ const stravaWebhook = async (req = request, res = response) => {
     credentials.access_token,
     object_id
   );
+
   if (responseActivity.errors) {
     return res.status(404).send(responseActivity);
   }
@@ -99,7 +101,11 @@ const stravaWebhook = async (req = request, res = response) => {
   leagues.forEach((league) => {
     const ids = league.segments.map((segment) => segment.id);
     if (ids) {
-      segmentsToSave.push({ league_id: league.id, segments: [...ids] });
+      segmentsToSave.push({
+        league_id: league.id,
+        start_date: league.start_date,
+        segments: [...ids],
+      });
     }
   });
 
@@ -111,14 +117,20 @@ const stravaWebhook = async (req = request, res = response) => {
 
   let totalEfforts = 0;
 
-  segmentsToSave.forEach(({ league_id, segments }) => {
+  segmentsToSave.forEach(({ league_id, start_date, segments }) => {
     segments.forEach(async (segment_id) => {
       const effort = searchSementInsideEfforts(segment_id);
+
       if (effort) {
-        totalEfforts++;
-        const { data: dataEfforts, error: errorEfforts } = await supabase
-          .from("efforts")
-          .upsert(formatEffort(effort, league_id));
+        const dateEffort = dayjs(effort.start_date, "YYYY-MM-DD");
+        const dateStartLeague = dayjs(start_date, "YYYY-MM-DD");
+        const isAfter = dateEffort.isAfter(dateStartLeague);
+        if (isAfter) {
+          totalEfforts++;
+          const { data: dataEfforts, error: errorEfforts } = await supabase
+            .from("efforts")
+            .upsert(formatEffort(effort, league_id));
+        }
       }
     });
   });

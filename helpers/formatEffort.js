@@ -1,6 +1,6 @@
 const formatEffort = (effort, league_id) => {
   const {
-    id,
+    id: effort_id,
     elapsed_time,
     moving_time,
     start_date,
@@ -15,7 +15,7 @@ const formatEffort = (effort, league_id) => {
   } = effort;
 
   return {
-    id,
+    effort_id,
     athlete_id,
     segment_id,
     elapsed_time,
