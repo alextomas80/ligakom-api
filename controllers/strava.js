@@ -29,10 +29,14 @@ const strava = (req, res = response) => {
 };
 
 const stravaWebhook = async (req = request, res = response) => {
-  const { owner_id, object_id } = req.body;
+  const { owner_id, object_id, aspect_type } = req.body;
+
+  if (aspect_type !== "create") {
+    return res.status(204).send(`Recibida actividad ${aspect_type}`);
+  }
 
   if (!owner_id || !object_id) {
-    return res.status(500).send("owner_id, object_id sin requeridos");
+    return res.status(404).send("owner_id, object_id sin requeridos");
   }
 
   console.log("⏰ Event received from Strava");
@@ -128,10 +132,13 @@ const stravaWebhook = async (req = request, res = response) => {
           `💾 Guardado ${bulkEfforts.length} esfuerzo(s): ${effortsName}`
         );
 
-        await sendNotification({
-          title: `${athleteName} ha subido una nueva actividad`,
-          body: `${bulkEfforts.length} esfuerzo(s) nuevos en ${effortsName}`,
-        });
+        // enviamos notificación
+        if (bulkEfforts.length) {
+          await sendNotification({
+            title: `${athleteName} ha subido una nueva actividad`,
+            body: `${bulkEfforts.length} esfuerzo(s) nuevos en ${effortsName}`,
+          });
+        }
 
         return res
           .status(200)
