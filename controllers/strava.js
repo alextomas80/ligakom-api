@@ -4,7 +4,12 @@ const formatEffort = require("../helpers/formatEffort");
 const dayjs = require("dayjs");
 
 const { refreshToken, getActivity } = require("../services/strava");
-const supabase = require("../services/supabase");
+const {
+  supabase,
+  updateAthlete,
+  getUserLeagues,
+  insertEfforts,
+} = require("../services/supabase");
 
 const strava = (req, res = response) => {
   const VERIFY_TOKEN = "LIGAKOM";
@@ -29,7 +34,7 @@ const stravaWebhook = async (req = request, res = response) => {
     return res.status(500).send("owner_id, object_id sin requeridos");
   }
 
-  console.log(" 🥳 🥳 🥳  Event received from Strava");
+  console.log("⏰ Event received from Strava");
 
   const { data: user, error: errorUser } = await supabase
     .from("athletes")
@@ -51,93 +56,90 @@ const stravaWebhook = async (req = request, res = response) => {
     expires_in: credentials.expires_in,
   };
 
-  const { data: refreshData, error: errorRefresh } = await supabase
-    .from("athletes")
-    .update(payload)
-    .eq("strava_id", owner_id)
-    .single();
+  const access_token = credentials.access_token;
 
-  if (errorRefresh) {
-    return res.status(404).send(errorRefresh);
-  }
+  // promesas
+  const updateDataAthlete = await updateAthlete(payload, owner_id);
+  const getActivityDetails = await getActivity(access_token, object_id);
+  const getLeagues = await getUserLeagues(user.id);
 
-  // obtener información de la actividad
-  const responseActivity = await getActivity(
-    credentials.access_token,
-    object_id
-  );
+  return Promise.all([updateDataAthlete, getActivityDetails, getLeagues])
+    .then(async (resp) => {
+      const currentAthlete = resp[0];
+      const activity = resp[1];
+      const leagues = resp[2];
 
-  if (responseActivity.errors) {
-    return res.status(404).send(responseActivity);
-  }
+      // montamos el nombre del atleta
+      const athleteName = `${currentAthlete.firstname} ${currentAthlete.lastname}`;
 
-  const { segment_efforts } = responseActivity;
-  console.log(`🔥 Obtenidos ${segment_efforts.length} esfuerzos`);
+      const { segment_efforts } = activity;
+      console.log(
+        `💪🏼 ${segment_efforts.length} esfuerzos de ${athleteName} en la actividad ${activity.name}`
+      );
 
-  // obtener ligas del usuario
-  const today = formatDate(new Date());
+      // obtener nombres de las ligas
+      const leagueNames = leagues.map((league) => league.name);
+      console.log(
+        `🚴🏻‍♂️ ${athleteName} está en ${leagues.length} liga(s): ${leagueNames}`
+      );
 
-  const { data, error: errorLeagues } = await supabase
-    .from("leagues")
-    .select(
-      `id, name, start_date, end_date,
-       segments!segment_league (id),
-       athletes!athlete_league (id)`
-    )
-    .lte("start_date", today)
-    .gte("end_date", today)
-    .order("name");
-
-  const leagues = data.filter((league) => {
-    const athletes = league.athletes.map((athlete) => athlete.id);
-    return athletes.includes(user.id);
-  });
-
-  if (errorLeagues) {
-    return res.status(404).send(errorLeagues);
-  }
-
-  const segmentsToSave = [];
-  leagues.forEach((league) => {
-    const ids = league.segments.map((segment) => segment.id);
-    if (ids) {
-      segmentsToSave.push({
-        league_id: league.id,
-        start_date: league.start_date,
-        segments: [...ids],
-      });
-    }
-  });
-
-  // recorro los esfueros del usuario y si está en sus ligas se guarda
-
-  const searchSementInsideEfforts = (segment_id) => {
-    return segment_efforts.find((effort) => effort.segment.id === segment_id);
-  };
-
-  let totalEfforts = 0;
-
-  segmentsToSave.forEach(({ league_id, start_date, segments }) => {
-    segments.forEach(async (segment_id) => {
-      const effort = searchSementInsideEfforts(segment_id);
-
-      if (effort) {
-        const dateEffort = dayjs(effort.start_date, "YYYY-MM-DD");
-        const dateStartLeague = dayjs(start_date, "YYYY-MM-DD");
-        const isAfter = dateEffort.isAfter(dateStartLeague);
-        if (isAfter) {
-          totalEfforts++;
-          const { data: dataEfforts, error: errorEfforts } = await supabase
-            .from("efforts")
-            .upsert(formatEffort(effort, league_id));
+      // generamos un array con las ligas y segmentos para guardar
+      const segmentsToSave = [];
+      leagues.forEach((league) => {
+        const ids = league.segments.map((segment) => segment.id);
+        if (ids) {
+          segmentsToSave.push({
+            league_id: league.id,
+            start_date: league.start_date,
+            segments: [...ids],
+          });
         }
-      }
-    });
-  });
+      });
 
-  return res
-    .status(200)
-    .send(`${totalEfforts} esfuerzos para ${user.firstname} ${user.lastname}`);
+      const searchSementInsideEfforts = (segment_id) => {
+        return segment_efforts.find(
+          (effort) => effort.segment.id === segment_id
+        );
+      };
+
+      let bulkEfforts = [];
+      let effortsName = [];
+
+      segmentsToSave.forEach(({ league_id, start_date, segments }) => {
+        segments.forEach(async (segment_id) => {
+          const effort = searchSementInsideEfforts(segment_id);
+          if (effort) {
+            effortsName.push(effort.name);
+            const dateEffort = dayjs(effort.start_date, "YYYY-MM-DD");
+            const dateStartLeague = dayjs(start_date, "YYYY-MM-DD");
+            const isAfter = dateEffort.isAfter(dateStartLeague);
+            if (isAfter) {
+              bulkEfforts.push(formatEffort(effort, league_id));
+            }
+          }
+        });
+      });
+
+      const { data, error } = await insertEfforts(bulkEfforts);
+      if (error) {
+        return res.status(500).send(error);
+      } else {
+        console.log(
+          `💾 Guardado ${bulkEfforts.length} esfuerzo(s): ${effortsName}`
+        );
+        return res
+          .status(200)
+          .send(
+            `💾 Guardado ${bulkEfforts.length} esfuerzo(s): ${effortsName}`
+          );
+      }
+
+      // console.log(res);
+    })
+    .catch((error) => {
+      console.log("error", error);
+      return res.status(500).send(error.toString());
+    });
 };
 
 module.exports = { strava, stravaWebhook };

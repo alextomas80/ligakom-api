@@ -43,9 +43,9 @@ class Server {
     this.app.listen(this.port, () => {
       console.clear();
       console.log(
-        `\n ✅ ${colors.white(
-          "Servidor corriendo en"
-        )} ${colors.brightBlue.bold(`http://localhost:${this.port}`)}`
+        `\n✅ ${colors.white("Servidor corriendo en")} ${colors.brightBlue.bold(
+          `http://localhost:${this.port}`
+        )}`
       );
     });
   }
