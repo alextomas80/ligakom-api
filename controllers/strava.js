@@ -2,6 +2,7 @@ const { response, request } = require("express");
 const { formatDate } = require("../helpers/formatDate");
 const formatEffort = require("../helpers/formatEffort");
 const dayjs = require("dayjs");
+const axios = require("axios");
 
 const { refreshToken, getActivity } = require("../services/strava");
 const {
@@ -126,19 +127,41 @@ const stravaWebhook = async (req = request, res = response) => {
         console.log(
           `💾 Guardado ${bulkEfforts.length} esfuerzo(s): ${effortsName}`
         );
+
+        await sendNotification({
+          title: `${athleteName} ha subido una nueva actividad`,
+          body: `${bulkEfforts.length} esfuerzo(s) nuevos en ${effortsName}`,
+        });
+
         return res
           .status(200)
           .send(
             `💾 ${bulkEfforts.length} esfuerzo(s) guardados: ${effortsName}`
           );
       }
-
-      // console.log(res);
     })
     .catch((error) => {
       console.log("error", error);
       return res.status(500).send(error.toString());
     });
+};
+
+const sendNotification = async (payload) => {
+  // TODO, gestionar los tokens
+  const expoToken = "ExponentPushToken[x0M-9cM_7G8ambehEEcs2E]";
+
+  const { title, body } = payload;
+
+  try {
+    const response = await axios.post("https://exp.host/--/api/v2/push/send", {
+      to: expoToken,
+      title,
+      body,
+    });
+    return response.data;
+  } catch (error) {
+    return error;
+  }
 };
 
 module.exports = { strava, stravaWebhook };
