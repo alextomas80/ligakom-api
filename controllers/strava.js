@@ -42,6 +42,10 @@ const stravaWebhook = async (req = request, res = response) => {
     .eq("strava_id", owner_id)
     .single();
 
+  // montamos el nombre del atleta
+  const athleteName = `${user.firstname} ${user.lastname}`;
+  console.log(`🤵🏻 ${athleteName}`);
+
   if (errorUser) {
     return res.status(404).send(errorUser);
   }
@@ -69,19 +73,14 @@ const stravaWebhook = async (req = request, res = response) => {
       const activity = resp[1];
       const leagues = resp[2];
 
-      // montamos el nombre del atleta
-      const athleteName = `${currentAthlete.firstname} ${currentAthlete.lastname}`;
-
       const { segment_efforts } = activity;
       console.log(
-        `💪🏼 ${segment_efforts.length} esfuerzos de ${athleteName} en la actividad ${activity.name}`
+        `💪🏼 ${segment_efforts.length} segmentos, actividad ${activity.name}`
       );
 
       // obtener nombres de las ligas
       const leagueNames = leagues.map((league) => league.name);
-      console.log(
-        `🚴🏻‍♂️ ${athleteName} está en ${leagues.length} liga(s): ${leagueNames}`
-      );
+      console.log(`🚴🏻‍♂️ ${leagues.length} liga(s): ${leagueNames}`);
 
       // generamos un array con las ligas y segmentos para guardar
       const segmentsToSave = [];
@@ -130,7 +129,7 @@ const stravaWebhook = async (req = request, res = response) => {
         return res
           .status(200)
           .send(
-            `💾 Guardado ${bulkEfforts.length} esfuerzo(s): ${effortsName}`
+            `💾 ${bulkEfforts.length} esfuerzo(s) guardados: ${effortsName}`
           );
       }
 
