@@ -53,4 +53,45 @@ const insertEfforts = async (efforts) => {
   return { data, error };
 };
 
-module.exports = { supabase, updateAthlete, getUserLeagues, insertEfforts };
+const getTokens = async (league) => {
+  const { data, error } = await supabase
+    .from("athlete_league")
+    .select("athlete_id, athletes!athlete_id(token)")
+    .eq("league_id", league.league_id);
+
+  const tokens = data.filter((athlete) => athlete.athletes.token);
+  const messages = generateMessages({
+    name: league.league_name,
+    current: league.current,
+    athleteName: league.athleteName,
+    tokens,
+  });
+
+  return messages;
+};
+
+const generateMessages = ({ name, current, athleteName, tokens }) => {
+  const messages = [];
+  tokens.forEach((item) => {
+    const iAm = item.athlete_id === current;
+    const to = item.athletes.token;
+    const message = `Nueva actividad en ${name}`;
+    const body = iAm
+      ? "✅ Tu actividad se ha subido correctamente"
+      : `🔥 ${athleteName} ha sincronizado una nueva actividad`;
+    messages.push({
+      message,
+      body,
+      to,
+    });
+  });
+  return messages;
+};
+
+module.exports = {
+  supabase,
+  updateAthlete,
+  getUserLeagues,
+  insertEfforts,
+  getTokens,
+};

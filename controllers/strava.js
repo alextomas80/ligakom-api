@@ -10,6 +10,7 @@ const {
   updateAthlete,
   getUserLeagues,
   insertEfforts,
+  getTokens,
 } = require("../services/supabase");
 
 const strava = (req, res = response) => {
@@ -79,7 +80,6 @@ const stravaWebhook = async (req = request, res = response) => {
 
   return Promise.all([updateDataAthlete, getActivityDetails, getLeagues])
     .then(async (resp) => {
-      const currentAthlete = resp[0];
       const activity = resp[1];
       const leagues = resp[2];
 
@@ -98,7 +98,10 @@ const stravaWebhook = async (req = request, res = response) => {
         const ids = league.segments.map((segment) => segment.id);
         if (ids) {
           segmentsToSave.push({
+            current: user.id,
+            athleteName,
             league_id: league.id,
+            league_name: league.name,
             start_date: league.start_date,
             segments: [...ids],
           });
@@ -145,10 +148,14 @@ const stravaWebhook = async (req = request, res = response) => {
           });
         }
 
+        generateMessagesToNotifify(segmentsToSave);
+
         return res
           .status(200)
           .send(
-            `💾 ${bulkEfforts.length} esfuerzo(s) guardados: ${effortsName}`
+            bulkEfforts.length
+              ? `💾 ${bulkEfforts.length} esfuerzo(s) guardados: ${effortsName}`
+              : `💾 No hay nuevos esfuerzos`
           );
       }
     })
@@ -159,21 +166,34 @@ const stravaWebhook = async (req = request, res = response) => {
 };
 
 const sendNotification = async (payload) => {
-  // TODO, gestionar los tokens
-  const expoToken = "ExponentPushToken[x0M-9cM_7G8ambehEEcs2E]";
-
-  const { title, body } = payload;
-
   try {
-    const response = await axios.post("https://exp.host/--/api/v2/push/send", {
-      to: expoToken,
-      title,
-      body,
-    });
+    const response = await axios.post(
+      "https://exp.host/--/api/v2/push/send",
+      payload
+    );
     return response.data;
   } catch (error) {
     return error;
   }
+};
+
+const generateMessagesToNotifify = async (segmentsToSave) => {
+  const leaguesToNotify = segmentsToSave.map((league) => {
+    return {
+      current: league.current,
+      athleteName: league.athleteName,
+      league_id: league.league_id,
+      league_name: league.league_name,
+    };
+  });
+
+  let promises = leaguesToNotify.map((league) => getTokens(league));
+
+  Promise.all(promises).then((tokens) => {
+    tokens.forEach((messages) => {
+      sendNotification(messages);
+    });
+  });
 };
 
 module.exports = { strava, stravaWebhook };
