@@ -57,7 +57,7 @@ const stravaWebhook = async (req = request, res = response) => {
   }
 
   // montamos el nombre del atleta
-  const athleteName = `${user?.firstname} ${user?.lastname}`;
+  const athleteName = `${user.firstname} ${user.lastname}`;
   console.log(`🤵🏻 ${athleteName}`);
 
   // refrescar token
