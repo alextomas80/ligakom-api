@@ -32,14 +32,19 @@ const stravaWebhook = async (req = request, res = response) => {
   const { owner_id, object_id, aspect_type } = req.body;
 
   if (aspect_type !== "create") {
+    console.log(`⚠️ Recibida actividad ${aspect_type}`);
+    console.log(req.body);
     return res.status(204).send(`Recibida actividad ${aspect_type}`);
   }
 
   if (!owner_id || !object_id) {
-    return res.status(404).send("owner_id, object_id sin requeridos");
+    console.log(`⚠️ owner_id, object_id son requeridos`);
+    console.log(req.body);
+    return res.status(404).send("owner_id, object_id son requeridos");
   }
 
   console.log("⏰ Event received from Strava");
+  console.log(req.body);
 
   const { data: user, error: errorUser } = await supabase
     .from("athletes")
@@ -47,13 +52,13 @@ const stravaWebhook = async (req = request, res = response) => {
     .eq("strava_id", owner_id)
     .single();
 
-  // montamos el nombre del atleta
-  const athleteName = `${user.firstname} ${user.lastname}`;
-  console.log(`🤵🏻 ${athleteName}`);
-
   if (errorUser) {
     return res.status(404).send(errorUser);
   }
+
+  // montamos el nombre del atleta
+  const athleteName = `${user?.firstname} ${user?.lastname}`;
+  console.log(`🤵🏻 ${athleteName}`);
 
   // refrescar token
   const credentials = await refreshToken(user.refresh_token);
