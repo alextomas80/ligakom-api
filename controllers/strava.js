@@ -142,13 +142,8 @@ const stravaWebhook = async (req = request, res = response) => {
 
         // enviamos notificación
         if (bulkEfforts.length) {
-          await sendNotification({
-            title: `${athleteName} ha subido una nueva actividad`,
-            body: `${bulkEfforts.length} esfuerzo(s) nuevos en ${effortsName}`,
-          });
+          generateMessagesToNotifify(segmentsToSave);
         }
-
-        generateMessagesToNotifify(segmentsToSave);
 
         return res
           .status(200)
