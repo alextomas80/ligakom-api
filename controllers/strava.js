@@ -11,6 +11,8 @@ const {
   getUserLeagues,
   insertEfforts,
   getTokens,
+  addActivityToQueue,
+  getActivityFromQueue,
 } = require("../services/supabase");
 
 // const tokensDevelopment = [
@@ -51,7 +53,44 @@ const stravaWebhook = async (req = request, res = response) => {
   }
 
   console.log("⏰ Event received from Strava");
-  console.log(req.body);
+
+  // queue activity
+  const payloadQueue = {
+    owner_id,
+    object_id,
+  };
+  const { data: dataQueue, error: errorQueue } = await addActivityToQueue(
+    payloadQueue
+  );
+
+  if (dataQueue) {
+    return res.status(200).send("Actividad añadida a la cola");
+  } else {
+    return res
+      .status(500)
+      .send("Hubo un error al añadir la actividad a la cola");
+  }
+};
+
+/**
+ * Procesamos la cola de actividades
+ * @param {*} req
+ * @param {*} res
+ * @returns
+ */
+const queueProcess = async (req = request, res = response) => {
+  const { key } = req.query;
+
+  if (!key || key !== "LIGAKOM") {
+    return res.status(500).send("No permitido.");
+  }
+
+  const { data, error } = await getActivityFromQueue();
+  if (error) {
+    return res.status(500).send(error);
+  }
+
+  const { owner_id, object_id } = data;
 
   const { data: user, error: errorUser } = await supabase
     .from("athletes")
@@ -148,7 +187,7 @@ const stravaWebhook = async (req = request, res = response) => {
 
         // enviamos notificación
         if (bulkEfforts.length) {
-          generateMessagesToNotifify(segmentsToSave);
+          // generateMessagesToNotifify(segmentsToSave);
         }
 
         return res
@@ -204,4 +243,4 @@ const generateMessagesToNotifify = async (segmentsToSave) => {
   });
 };
 
-module.exports = { strava, stravaWebhook };
+module.exports = { strava, stravaWebhook, queueProcess };

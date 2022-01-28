@@ -88,10 +88,31 @@ const generateMessages = ({ name, current, athleteName, tokens }) => {
   return messages;
 };
 
+const addActivityToQueue = async (payload) => {
+  const { data, error } = await supabase
+    .from("queue_activities")
+    .insert(payload);
+
+  return { data, error };
+};
+
+const getActivityFromQueue = async () => {
+  const { data, error } = await supabase
+    .from("queue_activities")
+    .select()
+    .order("created_at")
+    .limit(1)
+    .single();
+
+  return { data, error };
+};
+
 module.exports = {
   supabase,
   updateAthlete,
   getUserLeagues,
   insertEfforts,
   getTokens,
+  addActivityToQueue,
+  getActivityFromQueue,
 };
