@@ -83,7 +83,7 @@ const stravaWebhook = async (req = request, res = response) => {
 const queueProcess = async (req = request, res = response) => {
   const { key } = req.query;
 
-  if (!key || key !== "LIGAKOM") {
+  if (!key || !key.includes("LIGAKOM")) {
     return res.status(500).send("No permitido.");
   }
 
