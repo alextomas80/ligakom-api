@@ -53,7 +53,7 @@ const stravaWebhook = async (req = request, res = response) => {
     return res.status(404).send("owner_id, object_id son requeridos");
   }
 
-  console.log("⏰ Event received from Strava");
+  console.log("⏰ Evento recibido de Strava");
 
   // queue activity
   const payloadQueue = {
@@ -65,6 +65,7 @@ const stravaWebhook = async (req = request, res = response) => {
   );
 
   if (dataQueue) {
+    console.log("⏳ Actividad añadida a la cola");
     return res.status(200).send("Actividad añadida a la cola");
   } else {
     return res
@@ -192,7 +193,7 @@ const queueProcess = async (req = request, res = response) => {
 
         // enviamos notificación
         if (bulkEfforts.length) {
-          // generateMessagesToNotifify(segmentsToSave);
+          generateMessagesToNotifify(segmentsToSave);
         }
 
         return res
