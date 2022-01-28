@@ -88,6 +88,11 @@ const queueProcess = async (req = request, res = response) => {
   }
 
   const { data, error } = await getActivityFromQueue();
+
+  if (!data) {
+    return res.status(200).send("Todo al día.");
+  }
+
   if (error) {
     return res.status(500).send(error);
   }
