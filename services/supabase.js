@@ -107,6 +107,15 @@ const getActivityFromQueue = async () => {
   return { data, error };
 };
 
+const deleteActivityFromQueue = async (id) => {
+  const { data, error } = await supabase
+    .from("queue_activities")
+    .delete()
+    .eq("id", id);
+
+  return { data, error };
+};
+
 module.exports = {
   supabase,
   updateAthlete,
@@ -115,4 +124,5 @@ module.exports = {
   getTokens,
   addActivityToQueue,
   getActivityFromQueue,
+  deleteActivityFromQueue,
 };

@@ -13,6 +13,7 @@ const {
   getTokens,
   addActivityToQueue,
   getActivityFromQueue,
+  deleteActivityFromQueue,
 } = require("../services/supabase");
 
 // const tokensDevelopment = [
@@ -89,6 +90,10 @@ const queueProcess = async (req = request, res = response) => {
   if (error) {
     return res.status(500).send(error);
   }
+
+  // borramos la actividad de la cola
+  await deleteActivityFromQueue(data.id);
+  console.log("🗑 Actividad eliminada.");
 
   const { owner_id, object_id } = data;
 
