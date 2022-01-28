@@ -13,6 +13,12 @@ const {
   getTokens,
 } = require("../services/supabase");
 
+// const tokensDevelopment = [
+//   "ExponentPushToken[cUTozLFhENivdwIlxAxI87]", // android emulator
+//   "ExponentPushToken[lPRSXUDfHS5oP5wp9ktD2k]", // iOS Alex
+// ];
+const tokensNotificationError = "ExponentPushToken[lPRSXUDfHS5oP5wp9ktD2k]";
+
 const strava = (req, res = response) => {
   const VERIFY_TOKEN = "LIGAKOM";
 
@@ -155,8 +161,15 @@ const stravaWebhook = async (req = request, res = response) => {
       }
     })
     .catch((error) => {
-      console.log("error", error);
-      return res.status(500).send(error.toString());
+      const errorString = error.toString();
+      // enviar error
+      const payloadError = {
+        to: tokensNotificationError,
+        message: "Error en el webhook",
+        body: errorString,
+      };
+      sendNotification(payloadError);
+      return res.status(500).send(errorString);
     });
 };
 
