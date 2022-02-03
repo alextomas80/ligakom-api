@@ -53,6 +53,105 @@ const insertEfforts = async (efforts) => {
   return { data, error };
 };
 
+const insertQueuetEfforts = async (efforts) => {
+  const effortsQueue = efforts.map((effort) => {
+    const { league_id, athlete_id, segment_id, elapsed_time } = effort;
+    return {
+      league_id,
+      athlete_id,
+      segment_id,
+      elapsed_time,
+    };
+  });
+  const { data, error } = await supabase
+    .from("queue_efforts")
+    .insert(effortsQueue);
+
+  if (error) {
+    console.log("⚠️  [ERROR insertQueueEfforts]", error.message);
+    return new Error(error.message);
+  }
+
+  return { data, error };
+};
+
+const getEffortsQueued = async (limit) => {
+  const response = { error: null, messages: null };
+  const { data, error } = await supabase
+    .from("queue_efforts")
+    .select(
+      "id, league_id, elapsed_time, athletes!athlete_id(strava_id, firstname, lastname), segments!segment_id(id, name), leagues!league_id(name)"
+    )
+    .limit(limit)
+    .single();
+
+  // no hay registros anteriores
+  if (!data) {
+    return response;
+  }
+
+  const idEffortQueued = data.id;
+  const athleteIDwithNewKom = data.athletes.strava_id;
+
+  const { league_id, elapsed_time: newElapsedTime } = data;
+  const {
+    segments: { id: segment_id, name: segmentName },
+  } = data;
+  const {
+    athletes: { firstname, lastname },
+  } = data;
+  const newKomAthlete = `${firstname} ${lastname}`;
+  const {
+    leagues: { name: leagueName },
+  } = data;
+
+  const { data: lastItemEffort } = await supabase
+    .from("efforts")
+    .select(
+      "elapsed_time, athletes!athlete_id(strava_id, firstname, token, notifications)"
+    )
+    .match({ league_id, segment_id })
+    .limit(1)
+    .order("elapsed_time")
+    .single();
+
+  // no hay registros anteriores
+  if (!lastItemEffort) {
+    return response;
+  }
+
+  const { elapsed_time: lastElapsedTime } = lastItemEffort;
+
+  if (newElapsedTime < lastElapsedTime) {
+    const messages = [];
+    const tokens = await getAllAthleteTokensLeague(league_id);
+
+    // enviar mensaje a todos los de la liga
+    tokens.forEach((item) => {
+      const iAm = item.athletes.strava_id === athleteIDwithNewKom;
+      const to = item.athletes.token;
+      const title = `${leagueName}: ${segmentName}`;
+      const difference = lastElapsedTime - newElapsedTime;
+      const body = iAm
+        ? `🔥 Has mejorado el tiempo en ${difference}"`
+        : `🔥 ${newKomAthlete} ha mejorado el tiempo en ${difference}"`;
+      messages.push({
+        title,
+        body,
+        to,
+        badge: 1,
+        sound: "default",
+      });
+    });
+    response.messages = messages;
+    console.log(messages);
+  }
+
+  await supabase.from("queue_efforts").delete().eq("id", idEffortQueued);
+
+  return response;
+};
+
 const getTokens = async (league) => {
   const { data, error } = await supabase
     .from("athlete_league")
@@ -116,6 +215,15 @@ const deleteActivityFromQueue = async (id) => {
   return { data, error };
 };
 
+const getAllAthleteTokensLeague = async (league_id) => {
+  const { data, error } = await supabase
+    .from("athlete_league")
+    .select("athlete_id, athletes!athlete_id(strava_id, token, notifications)")
+    .eq("league_id", league_id);
+  const tokens = data.filter((athlete) => athlete.athletes.notifications);
+  return tokens;
+};
+
 module.exports = {
   supabase,
   updateAthlete,
@@ -125,4 +233,6 @@ module.exports = {
   addActivityToQueue,
   getActivityFromQueue,
   deleteActivityFromQueue,
+  insertQueuetEfforts,
+  getEffortsQueued,
 };

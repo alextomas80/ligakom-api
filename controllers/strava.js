@@ -14,6 +14,8 @@ const {
   addActivityToQueue,
   getActivityFromQueue,
   deleteActivityFromQueue,
+  insertQueuetEfforts,
+  getEffortsQueued,
 } = require("../services/supabase");
 
 // const tokensDevelopment = [
@@ -189,17 +191,16 @@ const queueProcess = async (req = request, res = response) => {
       });
 
       const { data, error } = await insertEfforts(bulkEfforts);
+      const { data: data2, error: error2 } = await insertQueuetEfforts(
+        bulkEfforts
+      );
+
       if (error) {
         return res.status(500).send(error);
       } else {
         console.log(
           `💾 Guardado ${bulkEfforts.length} esfuerzo(s): ${effortsName}`
         );
-
-        // enviamos notificación
-        if (bulkEfforts.length) {
-          generateMessagesToNotifify(segmentsToSave);
-        }
 
         return res
           .status(200)
@@ -221,6 +222,24 @@ const queueProcess = async (req = request, res = response) => {
       sendNotification(payloadError);
       return res.status(500).send(errorString);
     });
+};
+
+const queueProcessEfforts = async (req = request, res = response) => {
+  const response = await getEffortsQueued(1);
+
+  if (response.error) {
+    return res
+      .status(500)
+      .send("Hubo un error al obtener los datos de la cola");
+  }
+  if (response.messages && response.messages.length) {
+    sendNotification(response.messages);
+    return res
+      .status(200)
+      .send(`Se han enviado ${response.messages.length} notificaciones`);
+  }
+
+  return res.status(200).send(`Nada que notificar`);
 };
 
 const sendNotification = async (payload) => {
@@ -254,4 +273,4 @@ const generateMessagesToNotifify = async (segmentsToSave) => {
   });
 };
 
-module.exports = { strava, stravaWebhook, queueProcess };
+module.exports = { strava, stravaWebhook, queueProcess, queueProcessEfforts };
