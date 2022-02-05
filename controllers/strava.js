@@ -191,9 +191,9 @@ const queueProcess = async (req = request, res = response) => {
       });
 
       const { data, error } = await insertEfforts(bulkEfforts);
-      const { data: data2, error: error2 } = await insertQueuetEfforts(
-        bulkEfforts
-      );
+      // const { data: data2, error: error2 } = await insertQueuetEfforts(
+      //   bulkEfforts
+      // );
 
       if (error) {
         return res.status(500).send(error);
