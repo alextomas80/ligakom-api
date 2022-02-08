@@ -7,10 +7,8 @@ class Server {
     this.app = express();
     this.port = process.env.PORT || 3100;
     this.paths = {
-      auth: "/api/auth",
-      leagues: "/leagues",
+      league: "/api/league",
       strava: "/strava",
-      users: "/users",
     };
 
     // middlewares
@@ -37,7 +35,18 @@ class Server {
     });
 
     this.app.use(this.paths.strava, require("./routes/strava.routes"));
+    this.app.use(this.paths.league, require("./routes/league.routes"));
   }
+
+  // availableRoutesString() {
+  //   return this.app._router.stack
+  //     .filter((r) => r.route)
+  //     .map(
+  //       (r) =>
+  //         Object.keys(r.route.methods)[0].toUpperCase().padEnd(7) + r.route.path
+  //     )
+  //     .join("\n");
+  // }
 
   listen() {
     this.app.listen(this.port, () => {
