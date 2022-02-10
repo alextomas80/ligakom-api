@@ -69,7 +69,7 @@ const sendNotificationEffort = async (limit) => {
       // inserto el mensaje en la tabla, para verlo en el chat
       await insertMessage({
         athlete_id: "11111111-2222-3333-4444-555555555555",
-        message: messages[0].body,
+        message: `${messages[0].title} / ${messages[0].body}`,
         league_id: effort.league_id,
       });
 
