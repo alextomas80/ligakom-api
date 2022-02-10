@@ -1,5 +1,6 @@
 const { createClient } = require("@supabase/supabase-js");
 const { formatDate } = require("../helpers/formatDate");
+const sendNotificationEffort = require("./sendNotificationEffort");
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -55,12 +56,14 @@ const insertEfforts = async (efforts) => {
 
 const insertQueuetEfforts = async (efforts) => {
   const effortsQueue = efforts.map((effort) => {
-    const { league_id, athlete_id, segment_id, elapsed_time } = effort;
+    const { league_id, athlete_id, segment_id, elapsed_time, effort_id } =
+      effort;
     return {
       league_id,
       athlete_id,
       segment_id,
       elapsed_time,
+      effort_id,
     };
   });
   const { data, error } = await supabase
@@ -75,7 +78,7 @@ const insertQueuetEfforts = async (efforts) => {
   return { data, error };
 };
 
-const getEffortsQueued = async (limit) => {
+const getEffortsQueued_OLD = async (limit) => {
   const response = { error: null, messages: null };
   const { data, error } = await supabase
     .from("queue_efforts")
@@ -234,5 +237,5 @@ module.exports = {
   getActivityFromQueue,
   deleteActivityFromQueue,
   insertQueuetEfforts,
-  getEffortsQueued,
+  // getEffortsQueued,
 };

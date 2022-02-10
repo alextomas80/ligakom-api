@@ -17,6 +17,7 @@ const {
   insertQueuetEfforts,
   getEffortsQueued,
 } = require("../services/supabase");
+const sendNotificationEffort = require("../services/sendNotificationEffort");
 
 // const tokensDevelopment = [
 //   "ExponentPushToken[cUTozLFhENivdwIlxAxI87]", // android emulator
@@ -191,9 +192,9 @@ const queueProcess = async (req = request, res = response) => {
       });
 
       const { data, error } = await insertEfforts(bulkEfforts);
-      // const { data: data2, error: error2 } = await insertQueuetEfforts(
-      //   bulkEfforts
-      // );
+      const { data: data2, error: error2 } = await insertQueuetEfforts(
+        bulkEfforts
+      );
 
       if (error) {
         return res.status(500).send(error);
@@ -224,22 +225,13 @@ const queueProcess = async (req = request, res = response) => {
     });
 };
 
+/**
+ * ENVIAR NOTIFICACIONES DE PRs
+ * Procesa los esfuerzos pendientes de notificar de la tabla queue_efforts
+ */
 const queueProcessEfforts = async (req = request, res = response) => {
-  const response = await getEffortsQueued(1);
-
-  if (response.error) {
-    return res
-      .status(500)
-      .send("Hubo un error al obtener los datos de la cola");
-  }
-  if (response.messages && response.messages.length) {
-    sendNotification(response.messages);
-    return res
-      .status(200)
-      .send(`Se han enviado ${response.messages.length} notificaciones`);
-  }
-
-  return res.status(200).send(`Nada que notificar`);
+  const response = await sendNotificationEffort(1);
+  return res.status(200).send(response);
 };
 
 const sendNotification = async (payload) => {
